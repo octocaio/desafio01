@@ -1,24 +1,22 @@
 -- legacy_procs.sql
--- SQL Server 2000 style stored procedures
+-- SQL Server 2022 compatible stored procedures
 
 USE [YourDatabase]
 GO
 
--- Old-style procedure with deprecated SET ROWCOUNT
+-- Updated procedure using TOP clause instead of deprecated SET ROWCOUNT
 CREATE PROCEDURE GetTopCustomers
 AS
 BEGIN
-    SET ROWCOUNT 10
-    SELECT CustomerID, CompanyName, ContactName
+    SELECT TOP (10) CustomerID, CompanyName, ContactName
     FROM Customers
     ORDER BY CustomerID
-    SET ROWCOUNT 0
 END
 GO
 
--- Procedure using text datatype (deprecated)
+-- Procedure using VARCHAR(MAX) instead of deprecated TEXT datatype
 CREATE PROCEDURE InsertLogEntry
-    @LogText TEXT
+    @LogText VARCHAR(MAX)
 AS
 BEGIN
     INSERT INTO LogTable (LogEntry)
@@ -26,23 +24,28 @@ BEGIN
 END
 GO
 
--- Procedure using old JOIN syntax
+-- Procedure using modern explicit JOIN syntax
 CREATE PROCEDURE GetOrderDetails
     @OrderID INT
 AS
 BEGIN
     SELECT o.OrderID, o.OrderDate, c.CustomerID, c.CompanyName
-    FROM Orders o, Customers c
-    WHERE o.OrderID = @OrderID AND o.CustomerID = c.CustomerID
+    FROM Orders o
+    INNER JOIN Customers c ON o.CustomerID = c.CustomerID
+    WHERE o.OrderID = @OrderID
 END
 GO
 
--- Procedure using @@IDENTITY (deprecated in favor of SCOPE_IDENTITY())
+-- Procedure using SCOPE_IDENTITY() instead of deprecated @@IDENTITY
 CREATE PROCEDURE AddNewProduct
     @ProductName NVARCHAR(50),
-    @UnitPrice MONEY
+    @UnitPrice MONEY,
+    @NewProductID INT OUTPUT
 AS
 BEGIN
     INSERT INTO Products (ProductName, UnitPrice)
-    VALUES
-
+    VALUES (@ProductName, @UnitPrice)
+    
+    SET @NewProductID = SCOPE_IDENTITY()
+END
+GO
